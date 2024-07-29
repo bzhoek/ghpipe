@@ -1,6 +1,5 @@
-import {table} from 'table';
 import {Command} from 'commander';
-import {listWorkflowRuns, runWorkflow} from "./lib.js";
+import {deleteWorkflowRuns, deployLastWorkflow, listWorkflowRunsAsTable} from "./lib.js";
 
 let cli = new Command()
 cli.name('ghpipe')
@@ -9,39 +8,21 @@ cli.name('ghpipe')
   .description(`GitHub Actions pipeline commands`)
 
 let options = cli.opts()
+
 cli.command('runs')
-  .argument('<workflow>', 'workflow')
+  .argument('<workflow>', 'workflow id or name')
   .description('List runs for workflow')
-  .action((workflow) => {
-      listWorkflowRuns(options.owner, options.repo, workflow)
-        .then(({data}) => {
-          let mapped = data.workflow_runs.map(
-            run => [run.run_number, run.conclusion, run.display_title, run.head_sha, run.created_at]);
-          console.log(table(mapped));
-        }).catch(console.error);
-    }
-  )
+  .action((workflow) => listWorkflowRunsAsTable(options.owner, options.repo, workflow))
 
 cli.command('deploy')
   .argument('<workflow>', 'last workflow to deploy')
   .argument('<deploy>', 'deploy workflow')
   .description('List runs for workflow')
-  .action((workflow, deploy) => {
-      listWorkflowRuns(options.owner, options.repo, workflow)
-        .then(({data}) => {
-          let last = data.workflow_runs.find(run => run.conclusion === "success");
-          if (last === undefined) {
-            throw new Error("No successful runs found");
-          }
-          return runWorkflow(options.owner, options.repo, deploy, "master", {
-            refspec: last.head_sha
-          })
-        })
-        .then((run) => {
-          console.log(run);
-        })
-        .catch(console.error);
-    }
-  )
+  .action((workflow, deploy) => deployLastWorkflow(options.owner, options.repo, workflow, deploy))
+
+cli.command('clean')
+  .argument('<workflow>', 'workflow id or name')
+  .description('Removed failed runs for workflow')
+  .action((workflow) => deleteWorkflowRuns(options.owner, options.repo, workflow))
 
 cli.parse()
