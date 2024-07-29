@@ -1,6 +1,6 @@
 import fsp from "fs/promises";
 import {Octokit} from "@octokit/rest";
-import {table} from "table";
+import {getBorderCharacters, table} from "table";
 
 const octokit = await fsp.readFile("creds.json", "utf-8")
   .then((data) => {
@@ -25,12 +25,22 @@ export function listWorkflowRuns(owner, repo, workflow) {
 }
 
 export function listWorkflowRunsAsTable(owner, repo, workflow) {
+  let headers = ["Run", "Conclusion", "Title", "SHA", "Created"];
+  const config = {
+    border: getBorderCharacters('ramac'),
+    drawHorizontalLine: (index, count) => {
+      return index < 2 || index == count;
+    }
+  };
   listWorkflowRuns(owner, repo, workflow)
     .then(({data}) => {
       return data.workflow_runs.map(run => [run.run_number, run.conclusion, run.display_title, run.head_sha, run.created_at]);
     })
-    .then((data) => console.log(table(data)))
-    .catch(console.error);
+    .then((data) => {
+      data.splice(0, 0, headers)
+      console.log(table(data, config));
+    })
+    .catch(console.error)
 }
 
 export function deployLastWorkflow(owner, repo, workflow, deploy) {
