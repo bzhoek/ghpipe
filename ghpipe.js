@@ -1,31 +1,25 @@
-import {Octokit} from "@octokit/rest";
+import {table} from 'table';
 import {Command} from 'commander';
-import fsp from 'fs/promises';
+import {listWorkflowRuns} from "./lib.js";
 
-const octokit = await fsp.readFile("creds.json", "utf-8")
-  .then((data) => {
-    return JSON.parse(data);
-  })
-  .then((creds) => {
-    return new Octokit(creds);
-  });
+let cli = new Command()
+cli.name('ghpipe')
+  .option('-o, --owner <owner>')
+  .option('-r, --repo <repo>')
+  .description(`GitHub Actions pipeline commands`)
 
-octokit.rest.actions
-  .listRepoWorkflows({
-    owner: "zilverline",
-    repo: "zilverline.com",
-  })
-  .then(({data}) => {
-    console.log(data);
-  }).catch(console.error);
+let options = cli.opts()
+cli.command('runs')
+  .argument('<workflow>', 'workflow id or name')
+  .description('List runs for workflow')
+  .action((workflow) => {
+      listWorkflowRuns(options.owner, options.repo, workflow)
+        .then(({data}) => {
+          let mapped = data.workflow_runs.map(
+            run => [run.run_number, run.conclusion, run.display_title, run.head_sha, run.created_at]);
+          console.log(table(mapped));
+        }).catch(console.error);
+    }
+  )
 
-// let cli = new Command()
-// cli.name('ghpipe')
-//   .description(`GitHub Actions pipeline commands`)
-//
-// cli.command('clean')
-//   .argument('<query>', 'query')
-//   .description('Remove &nbsp; from fields')
-//   .action((query) => clean_notes(query + " &nbsp;"))
-//
-// cli.parse()
+cli.parse()
