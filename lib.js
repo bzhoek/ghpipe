@@ -25,3 +25,14 @@ export function listWorkflowRuns(owner, repo, workflow) {
       workflow_id: workflow,
     })
 }
+
+export function runWorkflow(owner, repo, workflow, ref, inputs) {
+  return octokit.rest.actions
+    .createWorkflowDispatch({
+      owner: owner,
+      repo: repo,
+      workflow_id: workflow,
+      ref: ref,
+      inputs: inputs,
+    })
+}
