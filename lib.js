@@ -43,10 +43,10 @@ export function listWorkflowRunsAsTable(owner, repo, workflow) {
     .catch(console.error)
 }
 
-export function deployLastWorkflow(owner, repo, workflow, deploy) {
+export function deployWorkflow(owner, repo, number, workflow, deploy) {
   listWorkflowRuns(owner, repo, workflow)
     .then(({data}) => {
-      let last = data.workflow_runs.find(run => run.conclusion === "success");
+      let last = data.workflow_runs.find(run => (number === 'last' && run.conclusion === "success") || run.run_number === parseInt(number));
       if (last === undefined) {
         throw new Error("No successful runs found");
       }

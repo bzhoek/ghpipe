@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import {Command} from 'commander';
-import {deleteWorkflowRuns, deployLastWorkflow, listWorkflowRunsAsTable} from "./lib.js";
+import {deleteWorkflowRuns, deployWorkflow, listWorkflowRunsAsTable} from "./lib.js";
 
 let cli = new Command()
 cli.name('ghpipe')
@@ -16,10 +16,11 @@ cli.command('runs')
   .action((workflow) => listWorkflowRunsAsTable(options.owner, options.repo, workflow))
 
 cli.command('deploy')
-  .argument('<workflow>', 'last workflow to deploy')
+  .argument('<number>', 'use sha from run number')
+  .argument('<workflow>', 'workflow with run number')
   .argument('<deploy>', 'deploy workflow')
   .description('List runs for workflow')
-  .action((workflow, deploy) => deployLastWorkflow(options.owner, options.repo, workflow, deploy))
+  .action((number, workflow, deploy) => deployWorkflow(options.owner, options.repo, number, workflow, deploy))
 
 cli.command('clean')
   .argument('<workflow>', 'workflow id or name')
