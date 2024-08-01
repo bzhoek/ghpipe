@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import {Command} from 'commander';
-import {deleteWorkflowRuns, deployWorkflow, listWorkflowRunsAsTable} from "./lib.js";
+import {deleteWorkflowRuns, dispatchWorkflow, listWorkflowRunsAsTable} from "./lib.js";
 
 let cli = new Command()
 cli.name('ghpipe')
@@ -10,21 +10,21 @@ cli.name('ghpipe')
 
 let options = cli.opts()
 
-cli.command('runs')
+cli.command('list')
   .argument('<workflow>', 'workflow id or name')
-  .description('List runs for workflow')
+  .description('List runs for <workflow>')
   .action((workflow) => listWorkflowRunsAsTable(options.owner, options.repo, workflow))
 
-cli.command('deploy')
+cli.command('run')
   .argument('<number>', 'use sha from run number')
-  .argument('<workflow>', 'workflow with run number')
-  .argument('<deploy>', 'deploy workflow')
-  .description('List runs for workflow')
-  .action((number, workflow, deploy) => deployWorkflow(options.owner, options.repo, number, workflow, deploy))
+  .argument('<list>', 'workflow with run number')
+  .argument('<workflow>', 'deploy workflow')
+  .description('Run <workflow> with sha from <number> in <list>>')
+  .action((number, list, workflow) => dispatchWorkflow(options.owner, options.repo, number, list, workflow))
 
 cli.command('clean')
   .argument('<workflow>', 'workflow id or name')
-  .description('Removed failed runs for workflow')
+  .description('Removed failed runs for <workflow>')
   .action((workflow) => deleteWorkflowRuns(options.owner, options.repo, workflow))
 
 cli.parse()

@@ -34,6 +34,7 @@ export function listWorkflowRunsAsTable(owner, repo, workflow) {
   };
   listWorkflowRuns(owner, repo, workflow)
     .then(({data}) => {
+      console.log(data.workflow_runs[0]);
       return data.workflow_runs.map(run => [run.run_number, run.conclusion, run.display_title, run.head_sha, run.created_at]);
     })
     .then((data) => {
@@ -43,17 +44,19 @@ export function listWorkflowRunsAsTable(owner, repo, workflow) {
     .catch(console.error)
 }
 
-export function deployWorkflow(owner, repo, number, workflow, deploy) {
-  listWorkflowRuns(owner, repo, workflow)
+export function dispatchWorkflow(owner, repo, number, list, workflow) {
+  listWorkflowRuns(owner, repo, list)
     .then(({data}) => {
       let last = data.workflow_runs.find(run => (number === 'last' && run.conclusion === "success") || run.run_number === parseInt(number));
       if (last === undefined) {
         throw new Error("No successful runs found");
       }
+      let sha = last.head_sha.substring(0, 7)
+      console.log(`Dispatch ${workflow} with sha ${sha} from run ${last.run_number}`);
       return octokit.rest.actions
         .createWorkflowDispatch({
-          owner: owner, repo: repo, workflow_id: deploy, ref: "master", inputs: {
-            refspec: last.head_sha
+          owner: owner, repo: repo, workflow_id: workflow, ref: "master", inputs: {
+            refspec: last.head_sha.substring(0, 7)
           }
         })
     })
