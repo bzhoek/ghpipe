@@ -69,7 +69,7 @@ export function dispatchWorkflow(owner, repo, number, list, workflow) {
 export function deleteWorkflowRuns(owner, repo, workflow) {
   listWorkflowRuns(owner, repo, workflow)
     .then(({data}) => {
-      return data.workflow_runs.filter(run => run.conclusion === "failure");
+      return data.workflow_runs.filter(run => ['cancelled', 'failure'].includes(run.conclusion));
     })
     .then((runs) => {
       console.log(`Deleting ${runs.length} failed runs`);
